@@ -1,10 +1,13 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
+.DS_Store
+node_modules/
+dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
 # Runtime data
 pids
 *.pid
@@ -57,3 +60,5 @@ typings/
 # dotenv environment variables file
 .env
 
+# Editor directories and files
+.idea
