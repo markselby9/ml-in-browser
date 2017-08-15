@@ -1,0 +1,23 @@
+#.cpd.yaml
+languages:
+  - javascript
+  - typescript
+  - jsx
+  - vue
+  - css
+files:
+  - 'src/**'
+exclude:
+  - 'dist/**'
+  - 'dest/**'
+  - 'neurons/**'
+  - 'node_modules/**'
+  - 'test/**'
+  - 'data/**'
+  - 'css/**'
+  - 'entries/**'
+reporter: xml
+limit: 100
+min-tokens: 70
+min-lines: 3
+output: './jscpd-report.xml'
