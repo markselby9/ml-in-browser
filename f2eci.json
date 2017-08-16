@@ -1,0 +1,12 @@
+{
+  "type": "static",
+  "scripts": {
+    "build": "yarn run build"
+  },
+  "output": "./html",
+  "dist": "./dist",
+  "env": "beta",
+  "urlPrefix": "./",
+  "ignoreJsMin": false,
+  "yarn": true
+}
