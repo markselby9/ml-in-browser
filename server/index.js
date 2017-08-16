@@ -16,6 +16,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true,
 }));
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    next();
+});
 
 function saveJSONToFile(jsonObject, callback) {
     fs.writeFile(path.join(__dirname, 'files', 'network.json'), JSON.stringify(jsonObject), callback);

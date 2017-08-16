@@ -16,14 +16,16 @@
                             <div class="des-detail">
                                 <div class="detail-content">
                                     <span style="font-size:20px;font-weight:bold;margin-bottom:10px">{{e.name}}</span>
-                                    <div class="detail-item" v-for="(key, index) in Object.keys(e)" :key="index" v-if=" key!=='src' &&  key!=='id'&&  key!=='name'">
-                                        <span class="detail-item-title">{{key+'：'}}</span>
+                                    <div class="detail-item" v-for="(key, index) in Object.keys(e)" :key="index"
+                                         v-if=" key!=='src' &&  key!=='id'&&  key!=='name'">
+                                        <span class="detail-item-title">{{key + '：'}}</span>
                                         {{e[key]}}
                                     </div>
                                 </div>
                                 <div class="card-container">
                                     <div class="card-bottom clearfix">
-                                        <el-button icon="star-off" :type="getStyle(e.id)" @click="want(e.id)">想看</el-button>
+                                        <el-button icon="star-off" :type="getStyle(e.id)" @click="want(e.id)">想看
+                                        </el-button>
                                     </div>
                                 </div>
                             </div>
@@ -33,14 +35,20 @@
             </div>
         </div>
         <div class="footer">
-            <el-button type="primary" @click="next_step===0?next():complete()"> {{next_step===0?'下一步':'提交'}} </el-button>
+            <el-button type="primary" @click="next_step===0?next():complete()"> {{next_step === 0 ? '下一步' : '提交'}}
+            </el-button>
         </div>
     </div>
 </template>
 
 <script>
+    import axios from 'axios';
     import { book_data, movie_data } from './data';
-    import { Neuron, Layer, Network, Trainer, Architect } from 'synaptic'
+    import { Neuron, Layer, Network, Trainer, Architect } from 'synaptic';
+
+    const learningRate = .3;
+    let localNetworkInstance;
+
     export default {
         data() {
             return {
@@ -49,47 +57,77 @@
                 book_ids: [],
                 movie_ids: [],
                 next_step: 0,
+                trainingSet: {
+                    input: [],
+                    output: [],
+                },
             }
         },
         created() {
+            // fetch the train model from server
             this.content_data = this.shuffle(book_data);
-            const myNetwork = new Architect.Perceptron(2, 2, 1);
-            const trainer = new Trainer(myNetwork);
-            // trainer.XOR();
-            // trainer.activate([0, 0]); // 0.0268581547421616
-            // trainer.activate([1, 0]); // 0.9829673642853368
-            // trainer.activate([0, 1]); // 0.9831714267395621
-            // trainer.activate([1, 1]); // 0.02128894618097928
-            const trainingSet = [
-                {
-                    input: [0, 0],
-                    output: [0]
-                },
-                {
-                    input: [0, 1],
-                    output: [1]
-                },
-                {
-                    input: [1, 0],
-                    output: [1]
-                },
-                {
-                    input: [1, 1],
-                    output: [0]
-                },
-            ];
-            trainer.trainAsync(trainingSet, {
-                rate: 0,
-                iterations: 500000,
-                error: .005,
-                shuffle: false,
-                log: 10000,
-                cost: Trainer.cost.CROSS_ENTROPY
-            }).then(results => {
-                console.log('done!', results)
-            });
 
+            axios.post('http://localhost:3000/getNetwork')
+                .then((response) => {
+                    const networkJSON = response.data.network;
+                    if (networkJSON) {
+                        console.log('received network', networkJSON);
+                        localNetworkInstance = Network.fromJSON(networkJSON);
+                    } else {
+                        // create a new network instance
+                        const inputLayer = new Layer(10);
+                        const hiddenLayer = new Layer(10);
+                        const outputLayer = new Layer(10);
 
+                        inputLayer.project(hiddenLayer);
+                        hiddenLayer.project(outputLayer);
+
+                        localNetworkInstance = new Network({
+                            input: inputLayer,
+                            hidden: [hiddenLayer],
+                            output: outputLayer
+                        });
+                    }
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+
+//            const myNetwork = new Architect.Perceptron(2, 2, 1);
+//            const trainer = new Trainer(myNetwork);
+//            // trainer.XOR();
+//            // trainer.activate([0, 0]); // 0.0268581547421616
+//            // trainer.activate([1, 0]); // 0.9829673642853368
+//            // trainer.activate([0, 1]); // 0.9831714267395621
+//            // trainer.activate([1, 1]); // 0.02128894618097928
+//            const trainingSet = [
+//                {
+//                    input: [0, 0],
+//                    output: [0]
+//                },
+//                {
+//                    input: [0, 1],
+//                    output: [1]
+//                },
+//                {
+//                    input: [1, 0],
+//                    output: [1]
+//                },
+//                {
+//                    input: [1, 1],
+//                    output: [0]
+//                },
+//            ];
+//            trainer.trainAsync(trainingSet, {
+//                rate: 0,
+//                iterations: 500000,
+//                error: .005,
+//                shuffle: false,
+//                log: 10000,
+//                cost: Trainer.cost.CROSS_ENTROPY
+//            }).then(results => {
+//                console.log('done!', results)
+//            });
         },
         methods: {
             shuffle(input) {
@@ -133,7 +171,44 @@
                 this.movie_ids.forEach(e => {
                     res_ids[e] = 1;
                 });
-                console.log(res_ids);
+                if (this.next_step === 0) {
+                    this.$set(this.trainingSet.input, res_ids);
+                    console.log('activated: ', localNetworkInstance.activate(res_ids));
+                } else if (this.next_step === 1) {
+                    this.$set(this.trainingSet.output, res_ids);
+                    this.reTrainByThisUserData();
+                }
+            },
+            reTrainByThisUserData() {
+                // retrain the model by this user's data
+                if (localNetworkInstance) {
+                    localNetworkInstance.propagate(learningRate, this.trainingSet.output);   // propagate the network
+                    console.log('retrained: ', localNetworkInstance.toJSON());
+                    console.log('sending to server');
+
+                    const successFunc = () => {
+                        console.log('success');
+                    };
+                    const errorFunc = (error) => {
+                        console.log('error', error);
+                    };
+
+                    axios.post('http://localhost:3000/setNetwork', {
+                        networkJSON: localNetworkInstance.toJSON()
+                    })
+                        .then((response) => {
+                            if (response.data && response.data.code === 200) {
+                                successFunc();
+                            } else {
+                                errorFunc(response.data);
+                            }
+                        })
+                        .catch(function (error) {
+                            errorFunc(error)
+                        });
+                } else {
+                    console.log('network is undefined!');
+                }
             },
             getStyle(id) {
                 switch (this.next_step) {
@@ -238,8 +313,6 @@
         margin: 10px 5px 5px 5px;
         text-align: center;
     }
-
-
 
     .clearfix:before,
     .clearfix:after {
