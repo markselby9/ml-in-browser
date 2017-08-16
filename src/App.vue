@@ -70,14 +70,15 @@
             axios.post('http://localhost:3000/getNetwork')
                 .then((response) => {
                     const networkJSON = response.data.network;
-                    if (networkJSON) {
+                    if (networkJSON && Object.keys(networkJSON).length > 0) {
                         console.log('received network', networkJSON);
                         localNetworkInstance = Network.fromJSON(networkJSON);
                     } else {
+                        console.log('create a new network instance');
                         // create a new network instance
-                        const inputLayer = new Layer(10);
-                        const hiddenLayer = new Layer(10);
-                        const outputLayer = new Layer(10);
+                        const inputLayer = new Layer(20);
+                        const hiddenLayer = new Layer(20);
+                        const outputLayer = new Layer(20);
 
                         inputLayer.project(hiddenLayer);
                         hiddenLayer.project(outputLayer);
@@ -87,47 +88,32 @@
                             hidden: [hiddenLayer],
                             output: outputLayer
                         });
+//                        mock();
                     }
                 })
                 .catch(function (error) {
                     console.log(error);
                 });
 
-//            const myNetwork = new Architect.Perceptron(2, 2, 1);
-//            const trainer = new Trainer(myNetwork);
-//            // trainer.XOR();
-//            // trainer.activate([0, 0]); // 0.0268581547421616
-//            // trainer.activate([1, 0]); // 0.9829673642853368
-//            // trainer.activate([0, 1]); // 0.9831714267395621
-//            // trainer.activate([1, 1]); // 0.02128894618097928
-//            const trainingSet = [
-//                {
-//                    input: [0, 0],
-//                    output: [0]
-//                },
-//                {
-//                    input: [0, 1],
-//                    output: [1]
-//                },
-//                {
-//                    input: [1, 0],
-//                    output: [1]
-//                },
-//                {
-//                    input: [1, 1],
-//                    output: [0]
-//                },
-//            ];
-//            trainer.trainAsync(trainingSet, {
-//                rate: 0,
-//                iterations: 500000,
-//                error: .005,
-//                shuffle: false,
-//                log: 10000,
-//                cost: Trainer.cost.CROSS_ENTROPY
-//            }).then(results => {
-//                console.log('done!', results)
-//            });
+            const mock = () => {
+                // ======== mock =========
+                // train the network
+                console.log('mock');
+                const learningRate = .3;
+                for (let i = 0; i < 20000; i++) {
+                    // 0,0 => 0
+                    localNetworkInstance.activate([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                    localNetworkInstance.propagate(learningRate, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+                    // 0,1 => 1
+                    localNetworkInstance.activate([1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                    localNetworkInstance.propagate(learningRate, [0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1]);
+                }
+
+// test the network
+                console.log(localNetworkInstance.activate([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])); // [0.015020775950893527]
+                console.log(localNetworkInstance.activate([1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])); // [0.015020775950893527]
+            }
         },
         methods: {
             shuffle(input) {
@@ -145,8 +131,10 @@
                     res_ids[e] = 1;
                 });
                 this.content_data = this.shuffle(movie_data);
-                this.next_step = 1;
+                this.$set(this.trainingSet.input, res_ids);
                 console.log(res_ids);
+                console.log('activated: ', localNetworkInstance.activate(res_ids));
+                this.next_step = 1;
             },
             want(id) {
                 switch (this.next_step) {
@@ -171,10 +159,7 @@
                 this.movie_ids.forEach(e => {
                     res_ids[e] = 1;
                 });
-                if (this.next_step === 0) {
-                    this.$set(this.trainingSet.input, res_ids);
-                    console.log('activated: ', localNetworkInstance.activate(res_ids));
-                } else if (this.next_step === 1) {
+                if (this.next_step === 1) {
                     this.$set(this.trainingSet.output, res_ids);
                     this.reTrainByThisUserData();
                 }
