@@ -73,6 +73,7 @@
                     if (networkJSON && Object.keys(networkJSON).length > 0) {
                         console.log('received network', networkJSON);
                         localNetworkInstance = Network.fromJSON(networkJSON);
+//                        mock();
                     } else {
                         console.log('create a new network instance');
                         // create a new network instance
@@ -88,7 +89,6 @@
                             hidden: [hiddenLayer],
                             output: outputLayer
                         });
-//                        mock();
                     }
                 })
                 .catch(function (error) {
@@ -131,7 +131,7 @@
                     res_ids[e] = 1;
                 });
                 this.content_data = this.shuffle(movie_data);
-                this.$set(this.trainingSet.input, res_ids);
+                this.$set(this.trainingSet, 'input', res_ids);
                 console.log(res_ids);
                 console.log('activated: ', localNetworkInstance.activate(res_ids));
                 this.next_step = 1;
@@ -160,13 +160,15 @@
                     res_ids[e] = 1;
                 });
                 if (this.next_step === 1) {
-                    this.$set(this.trainingSet.output, res_ids);
+                    this.$set(this.trainingSet, 'output', res_ids);
                     this.reTrainByThisUserData();
                 }
             },
             reTrainByThisUserData() {
                 // retrain the model by this user's data
                 if (localNetworkInstance) {
+                    console.log('activate, propagate');
+                    console.log('this time=====', localNetworkInstance.activate(this.trainingSet.input));
                     localNetworkInstance.propagate(learningRate, this.trainingSet.output);   // propagate the network
                     console.log('retrained: ', localNetworkInstance.toJSON());
                     console.log('sending to server');
