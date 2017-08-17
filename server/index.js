@@ -28,7 +28,11 @@ function saveJSONToFile(jsonObject, callback) {
 }
 
 function readJSONFromFile(successCb, errorCb) {
-    const filename = path.join(__dirname, 'files', 'network.json');
+    const dir = 'files';
+    const filename = path.join(__dirname, dir, 'network.json');
+    if (!fs.existsSync(path.join(__dirname, dir))){
+        fs.mkdirSync(path.join(__dirname, dir));
+    }
     fs.open(filename, 'r', function (err, fd) {
         if (err) {
             fs.writeFile(filename, '{}', function (err) {

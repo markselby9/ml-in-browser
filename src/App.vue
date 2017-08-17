@@ -5,8 +5,8 @@
                 <span style="font-size:25px;">前端ML</span>
             </div>
         </div>
-        <div class="container">
-            <div class="content" v-loading="loading">
+        <div class="container" v-loading.body="loading">
+            <div class="content">
                 <div class="item" v-for="(e, index) in content_data" :key="index">
                     <el-card :body-style="{ padding: '0px' }">
                         <div class="card-des">
@@ -38,6 +38,11 @@
             <el-button type="primary" @click="next_step===0?next():complete()"> {{next_step === 0 ? '下一步' : '提交'}}
             </el-button>
         </div>
+        <el-dialog title="神经网络预测结果" :visible.sync="resultDialogVisible">
+            <p>您的选择：{{trainingSet.output}}</p>
+            <p>我们的预测：{{activatedResult}}</p>
+            <p>您的选择结果已经在前端对神经网络进行了训练！</p>
+        </el-dialog>
     </div>
 </template>
 
@@ -61,20 +66,26 @@
                     input: [],
                     output: [],
                 },
+                activatedResult: [],
+                resultDialogVisible: false,
             }
         },
         created() {
             // fetch the train model from server
             this.content_data = this.shuffle(book_data);
-
+            this.loading = true;
             axios.post('http://localhost:3000/getNetwork')
                 .then((response) => {
+                    console.log(response);
+                    this.loading = false;
                     const networkJSON = response.data.network;
                     if (networkJSON && Object.keys(networkJSON).length > 0) {
+                        this.$message('Received neural network from server.');
                         console.log('received network', networkJSON);
                         localNetworkInstance = Network.fromJSON(networkJSON);
 //                        mock();
                     } else {
+                        this.$message('Created a new network instance.');
                         console.log('create a new network instance');
                         // create a new network instance
                         const inputLayer = new Layer(20);
@@ -92,6 +103,7 @@
                     }
                 })
                 .catch(function (error) {
+                    this.loading = false;
                     console.log(error);
                 });
 
@@ -133,7 +145,10 @@
                 this.content_data = this.shuffle(movie_data);
                 this.$set(this.trainingSet, 'input', res_ids);
                 console.log(res_ids);
-                console.log('activated: ', localNetworkInstance.activate(res_ids));
+                this.$message('Neural Network activated!');
+                this.activatedResult = localNetworkInstance.activate(res_ids);
+                this.activatedResult = this.activatedResult.map((num) => (num <= 0.5 ? 0 : 1));
+                console.log('activated: ', this.activatedResult);
                 this.next_step = 1;
             },
             want(id) {
@@ -162,28 +177,33 @@
                 if (this.next_step === 1) {
                     this.$set(this.trainingSet, 'output', res_ids);
                     this.reTrainByThisUserData();
+                    this.showResult();
                 }
             },
             reTrainByThisUserData() {
                 // retrain the model by this user's data
                 if (localNetworkInstance) {
-                    console.log('activate, propagate');
-                    console.log('this time=====', localNetworkInstance.activate(this.trainingSet.input));
                     localNetworkInstance.propagate(learningRate, this.trainingSet.output);   // propagate the network
                     console.log('retrained: ', localNetworkInstance.toJSON());
                     console.log('sending to server');
 
+                    this.$message('Neural Network retrained!');
+
                     const successFunc = () => {
                         console.log('success');
+                        this.$message('Successfully sent the new Neural Network!');
                     };
                     const errorFunc = (error) => {
                         console.log('error', error);
+                        this.$message(error);
                     };
 
+                    this.loading = true;
                     axios.post('http://localhost:3000/setNetwork', {
                         networkJSON: localNetworkInstance.toJSON()
                     })
                         .then((response) => {
+                            this.loading = false;
                             if (response.data && response.data.code === 200) {
                                 successFunc();
                             } else {
@@ -194,8 +214,12 @@
                             errorFunc(error)
                         });
                 } else {
+                    this.loading = false;
                     console.log('network is undefined!');
                 }
+            },
+            showResult() {
+                this.resultDialogVisible = true;
             },
             getStyle(id) {
                 switch (this.next_step) {
