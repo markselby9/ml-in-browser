@@ -83,7 +83,6 @@
                         this.$message('Received neural network from server.');
                         console.log('received network', networkJSON);
                         localNetworkInstance = Network.fromJSON(networkJSON);
-//                        mock();
                     } else {
                         this.$message('Created a new network instance.');
                         console.log('create a new network instance');
@@ -100,6 +99,7 @@
                             hidden: [hiddenLayer],
                             output: outputLayer
                         });
+//                        mock();
                     }
                 })
                 .catch(function (error) {
@@ -112,14 +112,16 @@
                 // train the network
                 console.log('mock');
                 const learningRate = .3;
-                for (let i = 0; i < 20000; i++) {
+                for (let i = 0; i < 2000; i++) {
                     // 0,0 => 0
                     localNetworkInstance.activate([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
                     localNetworkInstance.propagate(learningRate, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-                    // 0,1 => 1
                     localNetworkInstance.activate([1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
                     localNetworkInstance.propagate(learningRate, [0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1]);
+
+                    localNetworkInstance.activate([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1]);
+                    localNetworkInstance.propagate(learningRate, [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
                 }
 
 // test the network
