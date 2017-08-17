@@ -16,7 +16,7 @@ module.exports = class Agent {
   setEnvironment(env) {
     if (env) {
       this.env = env;
-      this.analyzeEnvironment(env);
+      this.analyzeEnvironment();
 
       return true;
     }
@@ -24,7 +24,7 @@ module.exports = class Agent {
   }
 
   analyzeEnvironment() {
-    console.log('Analysis!');
+    // console.log('Analysis!');
     // let the agent know about the game, know about win or lose
     const {size, p1, p2} = this.env;
     let myself = p2, enemy = p1;
@@ -43,7 +43,7 @@ module.exports = class Agent {
         if (i === 2) {
           if (j === 2) {
             // finished recursive call
-            mapStateToValue[environment.getCurrentState()] = environment.getResult(myself);
+            mapStateToValue[environment.getCurrentState()] = environment.getResult(myself) === 1? 1:0; // reward = 1 when winning, otherwise 0
           } else {
             const recursiveMap = getMapStateToValue(_.clone(environment), 0, j + 1, myself);
             mapStateToValue = _.merge(recursiveMap, mapStateToValue);
@@ -56,8 +56,8 @@ module.exports = class Agent {
 
       return mapStateToValue;
     };
-    this.mapStateToValue = getMapStateToValue(this.env, 0, 0, myself);
-    console.log('I have finished learning the game');
+    this.mapStateToValue = getMapStateToValue(_.cloneDeep(this.env), 0, 0, myself);
+    // console.log('I have finished learning the game');
   }
 
   // make an action for the next step, return [i, j]
@@ -72,35 +72,43 @@ module.exports = class Agent {
     const options = [];
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        if (this.env[i][j] === 0) {
+        if (this.env.board[i][j] === 0) {
           options.push([i, j]);
         }
       }
     }
     if (rand < this.epsilon) {
       // randomly pick an available place
+	    console.log('options[_.random(_.size(options))]', options[_.random(_.size(options))]);
       return options[_.random(_.size(options))];
     } else {
       // pick an option with the best value
-      let bestChoise = null;
+      let bestChoice = null;
       let bestValue = -1;
-      _.each(options, (i, j) => {
-        const currentEnv = _.clone(this.env);
-        currentEnv[i][j] = this.symbol;
+      _.each(options, (option) => {
+      	const i = option[0];
+	      const j = option[1];
+        const currentEnv = _.cloneDeep(this.env);
+        console.log(currentEnv.board, i, j);
+        currentEnv.board[i][j] = this.symbol;
         if (this.getValue(currentEnv) > bestValue) {
           bestValue = this.getValue(currentEnv);
-          bestChoise = [i, j];
+          bestChoice = [i, j];
         }
       });
-      if (bestChoise)
-        return bestChoise;
-      return options[_.random(_.size(options))];  // shouldn't go to this line
+	    console.log('bestChoice', bestChoice, bestValue);
+      if (bestChoice){
+      	console.log('bestChoice', bestChoice);
+	      return bestChoice;
+      }
     }
+	  console.log('shouldnt');
+	  return options[_.random(_.size(options))];  // shouldn't go to this line
   }
 
   recordStep(step) {
-    const newEnv = _.clone(this.env);
-    newEnv[step[0]][step[1]] = this.symbol;
+    const newEnv = _.cloneDeep(this.env);
+    newEnv.board[step[0]][step[1]] = this.symbol;
     this.historyStates.push(newEnv.getCurrentState());
   }
 
@@ -109,7 +117,7 @@ module.exports = class Agent {
   }
 
   getValue(env) {
-    return this.mapStateToValue(env.getCurrentState());
+    return this.mapStateToValue[env.getCurrentState()];
   }
 
   // learn from an episode of game
