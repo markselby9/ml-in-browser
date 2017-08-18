@@ -2,7 +2,7 @@
     <div class="app">
         <div class="header">
             <div class="header-container">
-                <span style="font-size:25px;">前端ML</span>
+                <span style="font-size:25px;">Front end Machine Learning</span>
             </div>
         </div>
         <div class="container" v-loading.body="loading">
