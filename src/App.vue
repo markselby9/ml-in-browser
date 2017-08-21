@@ -8,7 +8,7 @@
         <div class="container" v-loading.body="loading">
             <div class="content">
                 <div class="item" v-for="(e, index) in content_data" :key="index">
-                    <el-card :body-style="{ padding: '0px' }">
+                    <el-card :body-style="getBodyStyle(e.id)">
                         <div class="card-des">
                             <div class="des-img">
                                 <img class="image" :src="e.src">
@@ -16,8 +16,7 @@
                             <div class="des-detail">
                                 <div class="detail-content">
                                     <span style="font-size:20px;font-weight:bold;margin-bottom:10px">{{e.name}}</span>
-                                    <div class="detail-item" v-for="(key, index) in Object.keys(e)" :key="index"
-                                         v-if=" key!=='src' &&  key!=='id'&&  key!=='name'">
+                                    <div class="detail-item" v-for="(key, index) in Object.keys(e)" :key="index" v-if=" key!=='src' &&  key!=='id'&&  key!=='name'">
                                         <span class="detail-item-title">{{key + '：'}}</span>
                                         {{e[key]}}
                                     </div>
@@ -99,7 +98,7 @@
                             hidden: [hiddenLayer],
                             output: outputLayer
                         });
-//                        mock();
+                        //                        mock();
                     }
                 })
                 .catch(function (error) {
@@ -124,7 +123,7 @@
                     localNetworkInstance.propagate(learningRate, [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
                 }
 
-// test the network
+                // test the network
                 console.log(localNetworkInstance.activate([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])); // [0.015020775950893527]
                 console.log(localNetworkInstance.activate([1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])); // [0.015020775950893527]
             }
@@ -230,6 +229,13 @@
                     case 1:
                         return this.movie_ids.indexOf(id) === -1 ? 'default' : 'primary';
                 }
+            },
+            getBodyStyle(id) {
+                const resStyle = { padding: 0 };
+                if (activatedResult.length > 0 && activatedResult[id] === 1) {
+                    res.border = '1px solid red';
+                }
+                return resStyle;
             }
         }
     }
