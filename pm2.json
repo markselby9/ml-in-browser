@@ -1,14 +1,14 @@
 {
     "apps": [
         {
-            "name": "charon-web",
+            "name": "ml-in-browser",
             "script": "npm",
             "watch": false,
             "env": {
                 "NODE_ENV": "production"
             },
             "args":" -- run dev",
-            "cwd":"/data/webapps/charon-web/current/charon-web.node"
+            "cwd":"/data/webapps/ml-in-browser"
         }
     ]
 }
