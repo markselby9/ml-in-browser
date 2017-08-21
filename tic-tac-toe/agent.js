@@ -66,6 +66,7 @@ module.exports = class Agent {
       // game is ended
       return;
     }
+    let returnStep;
     const size = this.env.size;
     // throw a random number
     const rand = _.random(1, true);
@@ -79,8 +80,7 @@ module.exports = class Agent {
     }
     if (rand < this.epsilon) {
       // randomly pick an available place
-	    console.log('options[_.random(_.size(options))]', options[_.random(_.size(options))]);
-      return options[_.random(_.size(options))];
+	    returnStep = options[_.random(_.size(options) - 1)];
     } else {
       // pick an option with the best value
       let bestChoice = null;
@@ -89,21 +89,21 @@ module.exports = class Agent {
       	const i = option[0];
 	      const j = option[1];
         const currentEnv = _.cloneDeep(this.env);
-        console.log(currentEnv.board, i, j);
         currentEnv.board[i][j] = this.symbol;
         if (this.getValue(currentEnv) > bestValue) {
           bestValue = this.getValue(currentEnv);
           bestChoice = [i, j];
         }
       });
-	    console.log('bestChoice', bestChoice, bestValue);
       if (bestChoice){
-      	console.log('bestChoice', bestChoice);
-	      return bestChoice;
+	      returnStep = bestChoice;
       }
     }
-	  console.log('shouldnt');
-	  return options[_.random(_.size(options))];  // shouldn't go to this line
+    if (!returnStep) {
+	    console.log('shouldnt');
+    }
+	  // returnStep = options[_.random(_.size(options))];  // shouldn't go to this line
+	  return returnStep;
   }
 
   recordStep(step) {

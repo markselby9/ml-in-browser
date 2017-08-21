@@ -60,8 +60,10 @@ module.exports = class Env {
 
 		let result;
 		_.each(looking_conditions, (condition) => {
-			if (_.every(condition, (num) => (num === this.p1 || num === this.p2))) {
-				result = side === this.p1 ? 1 : -1; // somebody win
+			if (_.every(condition, (num) => (num === this.p1))) {
+				result = side === this.p1 ? 1 : -1; // p1 win
+			} else if (_.every(condition, (num) => (num === this.p2))) {
+				result = side === this.p2 ? 1 : -1; // p2 win
 			}
 		});
 		if (result === 1 || result === -1) {
