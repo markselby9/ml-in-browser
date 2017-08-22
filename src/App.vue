@@ -232,8 +232,8 @@
             },
             getBodyStyle(id) {
                 const resStyle = { padding: 0 };
-                if (activatedResult.length > 0 && activatedResult[id] === 1) {
-                    res.border = '1px solid red';
+                if (this.activatedResult.length > 0 && this.activatedResult[id] === 1) {
+                    resStyle.border = '1px solid red';
                 }
                 return resStyle;
             }
