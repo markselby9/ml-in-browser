@@ -1,11 +1,12 @@
 // run the tic-tac-toe AI in node.js
 const Env = require('./env');
 const Agent = require('./agent');
+const Human = require('./human');
 const _ = require('lodash');
 
-const Dolores = new Agent(0.5, 0.5, 1);
-const Ted = new Agent(0.5, 0.5, -1);
-const board = new Env(3, 1, -1);
+const Dolores = new Agent(0.5, 0.1, 1);
+const Ted = new Agent(0.5, 0.1, -1);
+const board = new Env(3, Dolores.symbol, Ted.symbol);
 
 Dolores.setEnvironment(board);  // give her the board
 Dolores.analyzeEnvironment();
@@ -26,9 +27,6 @@ const playGame = (p1, p2, environment, draw = false) => {
 			currentPlayer = p1;
 		}
 		const step = currentPlayer.makeAction();
-		if (step === undefined) {
-			console.log('ha');
-		}
 		environment.board[step[0]][step[1]] = currentPlayer.symbol;
 		p1.recordStep(step);
 		p2.recordStep(step);
@@ -53,8 +51,22 @@ const playGame = (p1, p2, environment, draw = false) => {
 	p2.upgrade(environment);
 };
 
-for (let i = 0; i < 100; i++) {
-	playGame(Dolores, Ted, new Env(3, Dolores.symbol, Ted.symbol), true);
-	console.log('game', i, 'finished');
+// Dolores.setAnalysis(true);
+for (let i = 0; i < 10000; i++) {
+	playGame(Dolores, Ted, new Env(3, Dolores.symbol, Ted.symbol), false);
+	// console.log('game', i, 'finished');
+	if (i % 100 === 0) {
+		console.log('game', i, 'finished');
+	}
 }
-playGame(Dolores, Ted, new Env(3, Dolores.symbol, Ted.symbol));
+
+Dolores.setAnalysis(true);
+while (1) {
+	console.log('=== Play with Dolores here! ===');
+// play with Dolores
+	const human = new Human();
+	const environment = new Env(3, Dolores.symbol, human.symbol);
+	Dolores.setEnvironment(environment);
+	human.setEnvironment(environment);
+	playGame(Dolores, human, environment, true);
+}
