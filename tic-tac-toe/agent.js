@@ -72,7 +72,7 @@ module.exports = class Agent {
 				}
 			});
 
-			return mapStateToValue;
+      return mapStateToValue;
 		};
 		if (_.isEqual(this.mapStateToValue, {})) {
 			this.mapStateToValue = getMapStateToValue(_.cloneDeep(this.env), 0, 0, myself);
@@ -107,13 +107,20 @@ module.exports = class Agent {
 			// pick an option with the best value
 			let bestChoice = null;
 			let bestValue = -1;
+
+			const optionValues = {}; // for analysis
+
 			_.each(options, (option) => {
 				const i = option[0];
 				const j = option[1];
 				const currentEnv = _.cloneDeep(this.env);
 				currentEnv.board[i][j] = this.symbol;
-				if (this.getValue(currentEnv) > bestValue) {
-					bestValue = this.getValue(currentEnv);
+				const thisOptionValue = this.getValue(currentEnv);
+
+				optionValues[option] = thisOptionValue;
+
+				if (thisOptionValue > bestValue) {
+					bestValue = thisOptionValue;
 					bestChoice = [i, j];
 				}
 			});
@@ -123,24 +130,7 @@ module.exports = class Agent {
 
 			if (this.analysis) {
 				console.log('Im actually thinking about this move');
-				const sizeX = _.size(this.env.board);
-				const sizeY = _.size(this.env.board[0]);
-				const result = _.times(sizeY, () => (_.times(sizeX, _.constant(0))));
-
-				for (let i = 0; i < _.size(this.env); i++) {
-					for (let j = 0; j < _.size(this.env[0]); j++) {
-						const currentEnv = _.cloneDeep(this.env);
-						if (currentEnv.board[i][j] !== 0) {
-							result[i][j] = currentEnv.board[i][j];
-						} else {
-							currentEnv.board[i][j] = this.symbol;
-							result[i][j] = this.mapStateToValue[currentEnv.getCurrentState()].toString();
-							currentEnv.board[i][j] = 0;
-						}
-					}
-				}
-				console.log('Ive already learnt so many situations:', _.size(Object.values(this.mapStateToValue).filter((v) => (v !== -1 && v !== 1))));
-				console.log('my thoughts:', JSON.stringify(result));
+				console.log(JSON.stringify(optionValues));
 			}
 		}
 		if (!returnStep) {
@@ -170,7 +160,7 @@ module.exports = class Agent {
 		const reward = env.getResult(this.symbol) === 1 ? 1 : 0;
 		let target = reward;
 		// learn!®
-		_.each(_.reverse(this.historyStates), (historyState) => {
+		_.each(this.historyStates, (historyState) => {
 			let newValueOfThisState =
 				new Decimal(this.mapStateToValue[historyState])
 					.add(new Decimal(this.learning_rate).times(new Decimal(target).sub(new Decimal(this.mapStateToValue[historyState]))));

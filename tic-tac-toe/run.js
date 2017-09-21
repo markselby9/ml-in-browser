@@ -28,7 +28,7 @@ const playGame = (p1, p2, environment, draw = false) => {
 		}
 		const step = currentPlayer.makeAction();
 		environment.board[step[0]][step[1]] = currentPlayer.symbol;
-		p1.recordStep(step);
+		p1.recordStep(step);	// TODO: use the right symbol here
 		p2.recordStep(step);
 		if (draw) {
 			console.log('===');
@@ -52,7 +52,7 @@ const playGame = (p1, p2, environment, draw = false) => {
 };
 
 // Dolores.setAnalysis(true);
-for (let i = 0; i < 10000; i++) {
+for (let i = 0; i < 1000; i++) {
 	playGame(Dolores, Ted, new Env(3, Dolores.symbol, Ted.symbol), false);
 	// console.log('game', i, 'finished');
 	if (i % 100 === 0) {
